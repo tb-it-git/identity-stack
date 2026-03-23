@@ -1,0 +1,3 @@
+---
+tls_cert_path: "/opt/certs/server.crt"
+tls_key_path: "/opt/certs/server.key"

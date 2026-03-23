@@ -1,0 +1,9 @@
+---
+certbot_email: "admin@example.com"
+certbot_domains:
+  - "id.{{ domain }}"
+  - "cloud.{{ domain }}"
+certbot_staging: false
+domain: "example.com"
+tls_cert_path: "/etc/letsencrypt/live/{{ certbot_domains[0] }}/fullchain.pem"
+tls_key_path: "/etc/letsencrypt/live/{{ certbot_domains[0] }}/privkey.pem"

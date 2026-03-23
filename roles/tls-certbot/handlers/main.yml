@@ -1,0 +1,7 @@
+---
+- name: Caddy neu laden
+  ansible.builtin.command:
+    cmd: "{{ compose_cmd }} exec caddy caddy reload --config /etc/caddy/Caddyfile"
+    chdir: "{{ stack_dir }}"
+  changed_when: true
+  ignore_errors: true

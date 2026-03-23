@@ -1,0 +1,146 @@
+---
+# -------------------------------------------------------
+# 1. Pakete installieren
+# -------------------------------------------------------
+- name: SSSD und LDAP-Pakete installieren (Debian)
+  ansible.builtin.apt:
+    name:
+      - sssd
+      - sssd-ldap
+      - sssd-tools
+      - ldap-utils
+      - libpam-sss
+      - libnss-sss
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: SSSD und LDAP-Pakete installieren (RedHat)
+  ansible.builtin.dnf:
+    name:
+      - sssd
+      - sssd-ldap
+      - sssd-tools
+      - openldap-clients
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: FIDO2-Pakete installieren (Debian)
+  ansible.builtin.apt:
+    name:
+      - libfido2-1
+      - libfido2-dev
+      - libfido2-tools
+      - openssh-server
+    state: present
+  when:
+    - fido2_ssh_enabled
+    - ansible_os_family == "Debian"
+
+- name: FIDO2-Pakete installieren (RedHat)
+  ansible.builtin.dnf:
+    name:
+      - libfido2
+      - libfido2-devel
+      - fido2-tools
+      - openssh-server
+    state: present
+  when:
+    - fido2_ssh_enabled
+    - ansible_os_family == "RedHat"
+
+# -------------------------------------------------------
+# 2. SSSD konfigurieren
+# -------------------------------------------------------
+- name: SSSD-Konfiguration erstellen
+  ansible.builtin.template:
+    src: sssd.conf.j2
+    dest: /etc/sssd/sssd.conf
+    owner: root
+    group: root
+    mode: "0600"
+  notify: SSSD neu starten
+
+# -------------------------------------------------------
+# 3. NSSwitch anpassen
+# -------------------------------------------------------
+- name: NSSwitch - sss fuer passwd hinzufuegen
+  ansible.builtin.lineinfile:
+    path: /etc/nsswitch.conf
+    regexp: '^passwd:'
+    line: 'passwd:         files sss'
+  notify: SSSD neu starten
+
+- name: NSSwitch - sss fuer group hinzufuegen
+  ansible.builtin.lineinfile:
+    path: /etc/nsswitch.conf
+    regexp: '^group:'
+    line: 'group:          files sss'
+  notify: SSSD neu starten
+
+- name: NSSwitch - sss fuer shadow hinzufuegen
+  ansible.builtin.lineinfile:
+    path: /etc/nsswitch.conf
+    regexp: '^shadow:'
+    line: 'shadow:         files sss'
+  notify: SSSD neu starten
+
+# -------------------------------------------------------
+# 4. SSH konfigurieren (LDAP-Key-Lookup + FIDO2)
+# -------------------------------------------------------
+- name: SSH - AuthorizedKeysCommand fuer LDAP-Keys
+  ansible.builtin.blockinfile:
+    path: /etc/ssh/sshd_config
+    marker: "# {mark} LLDAP SSH KEY LOOKUP"
+    block: |
+      AuthorizedKeysCommand /usr/bin/sss_ssh_authorizedkeys
+      AuthorizedKeysCommandUser nobody
+    validate: "sshd -t -f %s"
+  notify: SSHD neu starten
+
+- name: SSH - FIDO2 Security-Key-Typen akzeptieren
+  ansible.builtin.blockinfile:
+    path: /etc/ssh/sshd_config
+    marker: "# {mark} FIDO2 SSH MFA"
+    block: |
+      PubkeyAcceptedAlgorithms +sk-ssh-ed25519@openssh.com,sk-ecdsa-sha2-nistp256@openssh.com
+    validate: "sshd -t -f %s"
+  when: fido2_ssh_enabled
+  notify: SSHD neu starten
+
+# -------------------------------------------------------
+# 5. PAM - Home-Verzeichnis automatisch erstellen
+# -------------------------------------------------------
+- name: PAM - mkhomedir aktivieren (Debian)
+  ansible.builtin.command:
+    cmd: pam-auth-update --enable mkhomedir
+  changed_when: false
+  when:
+    - create_home_dirs
+    - ansible_os_family == "Debian"
+
+- name: PAM - authselect mit mkhomedir (RedHat)
+  ansible.builtin.command:
+    cmd: authselect select sssd with-mkhomedir --force
+  changed_when: false
+  when:
+    - create_home_dirs
+    - ansible_os_family == "RedHat"
+
+- name: oddjobd aktivieren fuer mkhomedir (RedHat)
+  ansible.builtin.systemd:
+    name: oddjobd
+    enabled: true
+    state: started
+  when:
+    - create_home_dirs
+    - ansible_os_family == "RedHat"
+
+# -------------------------------------------------------
+# 6. Dienste aktivieren
+# -------------------------------------------------------
+- name: SSSD-Dienst aktivieren und starten
+  ansible.builtin.systemd:
+    name: sssd
+    enabled: true
+    state: started

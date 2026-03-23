@@ -1,0 +1,3 @@
+---
+# Pfad zum CA-Zertifikat auf dem Ansible-Controller
+ca_cert_source: "/opt/certs/self/ca.crt"

@@ -1,0 +1,22 @@
+---
+# CA-Zertifikat auf Clients verteilen und als vertrauenswuerdig eintragen
+
+- name: CA-Zertifikat kopieren (Debian)
+  ansible.builtin.copy:
+    src: "{{ ca_cert_source }}"
+    dest: /usr/local/share/ca-certificates/identity-stack-ca.crt
+    owner: root
+    group: root
+    mode: "0644"
+  notify: CA-Trust aktualisieren (Debian)
+  when: ansible_os_family == "Debian"
+
+- name: CA-Zertifikat kopieren (RedHat)
+  ansible.builtin.copy:
+    src: "{{ ca_cert_source }}"
+    dest: /etc/pki/ca-trust/source/anchors/identity-stack-ca.crt
+    owner: root
+    group: root
+    mode: "0644"
+  notify: CA-Trust aktualisieren (RedHat)
+  when: ansible_os_family == "RedHat"

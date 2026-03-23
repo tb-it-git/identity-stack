@@ -1,0 +1,10 @@
+---
+- name: SSSD neu starten
+  ansible.builtin.systemd:
+    name: sssd
+    state: restarted
+
+- name: SSHD neu starten
+  ansible.builtin.systemd:
+    name: sshd
+    state: restarted

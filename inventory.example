@@ -1,0 +1,12 @@
+[server]
+# Server auf dem LLDAP, Pocket ID, Nextcloud laufen
+# idserver ansible_host=192.168.1.10 ansible_user=admin
+
+[clients]
+# Linux-Clients die an LLDAP angebunden werden
+# workstation1 ansible_host=192.168.1.20
+# workstation2 ansible_host=192.168.1.21
+
+[clients:vars]
+# Clients verbinden sich per SSH-Tunnel/localhost auf LLDAP
+lldap_uri=ldap://localhost:3890

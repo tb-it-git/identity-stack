@@ -1,0 +1,60 @@
+---
+# -------------------------------------------------------
+# 1. Voraussetzungen
+# -------------------------------------------------------
+- name: Stack-Verzeichnis erstellen
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0750"
+  loop:
+    - "{{ stack_dir }}"
+    - "{{ stack_dir }}/caddy-data"
+    - "{{ stack_dir }}/caddy-config"
+
+- name: Container-Datenverzeichnisse erstellen (Owner 1000:1000)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "1000"
+    group: "1000"
+    mode: "0750"
+  loop:
+    - "{{ stack_dir }}/lldap-data"
+    - "{{ stack_dir }}/pocket-id-data"
+    - "{{ stack_dir }}/nextcloud-data"
+
+# -------------------------------------------------------
+# 2. Compose + Configs deployen
+# -------------------------------------------------------
+- name: Compose-Datei erstellen
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ stack_dir }}/docker-compose.yml"
+    mode: "0640"
+  register: compose_file
+
+- name: Pocket ID Environment-Datei erstellen
+  ansible.builtin.template:
+    src: pocket-id.env.j2
+    dest: "{{ stack_dir }}/pocket-id.env"
+    mode: "0600"
+  register: pocket_id_env
+
+- name: Caddyfile erstellen
+  ansible.builtin.template:
+    src: Caddyfile.j2
+    dest: "{{ stack_dir }}/Caddyfile"
+    mode: "0644"
+  register: caddyfile
+
+# -------------------------------------------------------
+# 3. Stack starten (runtime-spezifisch)
+# -------------------------------------------------------
+- name: Stack starten (Podman)
+  ansible.builtin.include_tasks: start-podman.yml
+  when: container_runtime == "podman"
+
+- name: Stack starten (Docker)
+  ansible.builtin.include_tasks: start-docker.yml
+  when: container_runtime == "docker"

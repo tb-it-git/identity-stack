@@ -1,0 +1,103 @@
+---
+# =============================================================
+# Identity Stack - Globale Variablen
+# =============================================================
+# Kopiere diese Datei nach group_vars/all.yml und passe sie an.
+# Passwörter sollten per ansible-vault verschlüsselt werden.
+
+# -------------------------------------------------------------
+# Container Runtime
+# -------------------------------------------------------------
+# "podman" oder "docker"
+container_runtime: "podman"
+# Compose-Befehl: "podman-compose" oder "docker compose"
+compose_cmd: "podman-compose"
+# Pfad zum Compose-Binary (falls nicht im PATH)
+# compose_bin: "/usr/bin/podman-compose"
+
+# -------------------------------------------------------------
+# LLDAP
+# -------------------------------------------------------------
+lldap_base_dn: "dc=forschung,dc=intern"
+lldap_admin_password: "CHANGEME"
+lldap_jwt_secret: "CHANGEME-use-openssl-rand-base64-32"
+
+# Service Account für SSSD (nur Leserechte, Gruppe: lldap_strict_readonly)
+# WICHTIG: Keine Sonderzeichen (!, #, $, %) im Passwort
+lldap_bind_dn: "uid=svc-sssd,ou=people,dc=forschung,dc=intern"
+lldap_bind_password: "CHANGEME"
+
+# -------------------------------------------------------------
+# Pocket ID
+# -------------------------------------------------------------
+pocket_id_app_url: "https://id.example.com"
+pocket_id_encryption_key: "CHANGEME-use-openssl-rand-base64-32"
+
+# SMTP (MailHog für Tests, später echten Mailserver eintragen)
+smtp_host: "mailhog"
+smtp_port: 1025
+smtp_from: "pocketid@example.com"
+smtp_user: ""
+smtp_password: ""
+smtp_tls: "none"
+
+# -------------------------------------------------------------
+# Nextcloud
+# -------------------------------------------------------------
+nextcloud_admin_user: "admin"
+nextcloud_admin_password: "CHANGEME"
+
+# OIDC (aus Pocket ID OIDC-Client kopieren)
+nextcloud_oidc_client_id: "CHANGEME"
+nextcloud_oidc_client_secret: "CHANGEME"
+nextcloud_oidc_provider_url: "https://id.example.com"
+
+# -------------------------------------------------------------
+# TLS / Zertifikate
+# -------------------------------------------------------------
+# Modus: "selfsigned", "certbot" oder "existing"
+#
+#   selfsigned - Eigene CA + Server-Zertifikat wird erstellt (Role: tls-certs)
+#                Gut fuer interne Netze / Testumgebungen
+#
+#   certbot    - Let's Encrypt Zertifikat per Certbot
+#                Braucht oeffentliche Domain + Port 80 erreichbar
+#
+#   existing   - Vorhandene Zertifikate verwenden
+#                Pfade in tls_cert_path / tls_key_path angeben
+#
+tls_mode: "selfsigned"
+
+# --- Fuer alle Modi: ---
+domain: "example.com"
+tls_cert_path: "/opt/certs/self/server.crt"
+tls_key_path: "/opt/certs/self/server.key"
+
+# --- Nur fuer selfsigned: ---
+cert_dir: "/opt/certs/self"
+ca_cn: "Identity Stack Root CA"
+ca_org: "Forschung"
+ca_country: "DE"
+ca_state: "RLP"
+ca_validity_days: 3650
+cert_validity_days: 365
+cert_domains:
+  - "id.{{ domain }}"
+  - "cloud.{{ domain }}"
+  - "*.{{ domain }}"
+
+# --- Nur fuer certbot: ---
+certbot_email: "admin@example.com"
+certbot_domains:
+  - "id.{{ domain }}"
+  - "cloud.{{ domain }}"
+# certbot_staging: true  # Zum Testen (kein Rate-Limit)
+
+# -------------------------------------------------------------
+# SSSD Client
+# -------------------------------------------------------------
+sssd_domain: "forschung"
+lldap_uri: "ldap://localhost:3890"
+ssh_allow_groups: []
+create_home_dirs: true
+fido2_ssh_enabled: true

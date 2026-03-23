@@ -1,0 +1,15 @@
+---
+cert_dir: "/opt/certs/self"
+ca_cn: "Identity Stack Root CA"
+ca_org: "Forschung"
+ca_country: "DE"
+ca_state: "RLP"
+ca_validity_days: 3650
+
+cert_validity_days: 365
+cert_domains:
+  - "id.{{ domain }}"
+  - "cloud.{{ domain }}"
+  - "*.{{ domain }}"
+
+domain: "example.com"

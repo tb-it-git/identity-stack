@@ -1,0 +1,73 @@
+[sssd]
+config_file_version = 2
+services = nss, pam, ssh
+domains = {{ sssd_domain }}
+
+[nss]
+filter_groups = root
+filter_users = root
+
+[pam]
+offline_credentials_expiration = 7
+
+[ssh]
+
+[domain/{{ sssd_domain }}]
+id_provider = ldap
+auth_provider = ldap
+chpass_provider = ldap
+
+# LLDAP-Verbindung
+ldap_uri = {{ lldap_uri }}
+ldap_search_base = {{ lldap_base_dn }}
+ldap_default_bind_dn = {{ lldap_bind_dn }}
+ldap_default_authtok = {{ lldap_bind_password }}
+# WICHTIG: Passwort darf keine Sonderzeichen (!, #, $, %) enthalten
+
+# Ohne TLS (nur im internen Netz verwenden)
+ldap_auth_disable_tls_never_use_in_production = true
+
+# User-Suche
+ldap_user_search_base = ou=people,{{ lldap_base_dn }}
+ldap_user_object_class = person
+ldap_user_name = uid
+ldap_user_uid_number = uidNumber
+ldap_user_gid_number = gidNumber
+ldap_user_home_directory = homeDirectory
+ldap_user_shell = loginShell
+ldap_user_ssh_public_key = sshPublicKey
+
+# Gruppen-Suche
+ldap_group_search_base = ou=groups,{{ lldap_base_dn }}
+ldap_group_object_class = groupOfUniqueNames
+ldap_group_name = cn
+ldap_group_gid_number = gidNumber
+ldap_group_member = uniqueMember
+
+# ID-Bereich (nicht mit lokalen UIDs kollidieren)
+min_id = 10000
+max_id = 60000
+
+# Cache
+cache_credentials = true
+entry_cache_timeout = 300
+
+# Schema
+ldap_schema = rfc2307bis
+
+# TLS (anpassen falls LDAPS genutzt wird)
+ldap_id_use_start_tls = false
+# ldap_tls_reqcert = demand
+# ldap_tls_cacert = /etc/ssl/certs/ca-certificates.crt
+
+# Zugriffskontrolle
+{% if ssh_allow_groups | length > 0 %}
+access_provider = simple
+simple_allow_groups = {{ ssh_allow_groups | join(', ') }}
+{% else %}
+access_provider = permit
+{% endif %}
+
+# Home-Verzeichnis Fallback
+fallback_homedir = /home/%u
+default_shell = /bin/bash

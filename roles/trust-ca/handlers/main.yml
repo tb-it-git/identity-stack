@@ -1,0 +1,10 @@
+---
+- name: CA-Trust aktualisieren (Debian)
+  ansible.builtin.command:
+    cmd: update-ca-certificates
+  changed_when: true
+
+- name: CA-Trust aktualisieren (RedHat)
+  ansible.builtin.command:
+    cmd: update-ca-trust
+  changed_when: true

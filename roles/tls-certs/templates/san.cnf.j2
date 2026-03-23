@@ -1,0 +1,19 @@
+[req]
+default_bits = 2048
+prompt = no
+distinguished_name = dn
+req_extensions = v3_req
+
+[dn]
+C = {{ ca_country }}
+ST = {{ ca_state }}
+O = {{ ca_org }}
+CN = id.{{ domain }}
+
+[v3_req]
+subjectAltName = @alt_names
+
+[alt_names]
+{% for domain_name in cert_domains %}
+DNS.{{ loop.index }} = {{ domain_name }}
+{% endfor %}

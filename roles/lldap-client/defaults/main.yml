@@ -1,0 +1,10 @@
+---
+lldap_uri: "ldap://localhost:3890"
+lldap_base_dn: "dc=forschung,dc=intern"
+lldap_bind_dn: "uid=svc-sssd,ou=people,dc=forschung,dc=intern"
+# lldap_bind_password: defined in group_vars or vault
+
+sssd_domain: "forschung"
+ssh_allow_groups: []
+create_home_dirs: true
+fido2_ssh_enabled: true

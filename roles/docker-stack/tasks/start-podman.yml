@@ -1,0 +1,31 @@
+---
+# Ausgelagert damit podman-compose und pip nur geladen werden
+# wenn container_runtime == "podman" gesetzt ist.
+
+- name: Podman Default-Registry konfigurieren
+  ansible.builtin.lineinfile:
+    path: /etc/containers/registries.conf
+    regexp: '^unqualified-search-registries'
+    line: 'unqualified-search-registries = ["docker.io"]'
+    create: true
+    mode: "0644"
+
+- name: podman-compose installieren
+  ansible.builtin.pip:
+    name: podman-compose
+    state: present
+    break_system_packages: true
+
+- name: Stack starten
+  ansible.builtin.command:
+    cmd: "{{ compose_cmd }} up -d"
+    chdir: "{{ stack_dir }}"
+  register: podman_up
+  changed_when: "'Creating' in podman_up.stdout or 'Recreating' in podman_up.stdout"
+
+- name: Stack neu starten bei Aenderungen
+  ansible.builtin.command:
+    cmd: "{{ compose_cmd }} up -d --force-recreate"
+    chdir: "{{ stack_dir }}"
+  when: compose_file.changed or pocket_id_env.changed or caddyfile.changed
+  changed_when: true

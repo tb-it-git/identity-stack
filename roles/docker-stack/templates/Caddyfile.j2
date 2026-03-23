@@ -1,0 +1,17 @@
+id.{{ domain }} {
+{% if tls_mode == "selfsigned" or tls_mode == "existing" %}
+    tls /etc/caddy/server.crt /etc/caddy/server.key
+{% elif tls_mode == "certbot" %}
+    tls /etc/caddy/fullchain.pem /etc/caddy/privkey.pem
+{% endif %}
+    reverse_proxy pocket-id:1411
+}
+
+cloud.{{ domain }} {
+{% if tls_mode == "selfsigned" or tls_mode == "existing" %}
+    tls /etc/caddy/server.crt /etc/caddy/server.key
+{% elif tls_mode == "certbot" %}
+    tls /etc/caddy/fullchain.pem /etc/caddy/privkey.pem
+{% endif %}
+    reverse_proxy nextcloud:80
+}

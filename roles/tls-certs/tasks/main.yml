@@ -1,0 +1,99 @@
+---
+# -------------------------------------------------------
+# 1. Verzeichnis erstellen
+# -------------------------------------------------------
+- name: Zertifikats-Verzeichnis erstellen
+  ansible.builtin.file:
+    path: "{{ cert_dir }}"
+    state: directory
+    mode: "0700"
+
+# -------------------------------------------------------
+# 2. CA erstellen (nur wenn nicht vorhanden)
+# -------------------------------------------------------
+- name: Pruefen ob CA bereits existiert
+  ansible.builtin.stat:
+    path: "{{ cert_dir }}/ca.crt"
+  register: ca_exists
+
+- name: CA-Schluessel erstellen
+  ansible.builtin.command:
+    cmd: >
+      openssl genrsa -out {{ cert_dir }}/ca.key 4096
+  when: not ca_exists.stat.exists
+
+- name: CA-Zertifikat erstellen
+  ansible.builtin.command:
+    cmd: >
+      openssl req -x509 -new -nodes
+      -key {{ cert_dir }}/ca.key
+      -sha256 -days {{ ca_validity_days }}
+      -out {{ cert_dir }}/ca.crt
+      -subj "/C={{ ca_country }}/ST={{ ca_state }}/O={{ ca_org }}/CN={{ ca_cn }}"
+  when: not ca_exists.stat.exists
+
+# -------------------------------------------------------
+# 3. Server-Zertifikat erstellen (nur wenn nicht vorhanden)
+# -------------------------------------------------------
+- name: Pruefen ob Server-Zertifikat bereits existiert
+  ansible.builtin.stat:
+    path: "{{ cert_dir }}/server.crt"
+  register: server_cert_exists
+
+- name: OpenSSL SAN-Config erstellen
+  ansible.builtin.template:
+    src: san.cnf.j2
+    dest: "{{ cert_dir }}/san.cnf"
+    mode: "0600"
+  when: not server_cert_exists.stat.exists
+
+- name: Server-Schluessel erstellen
+  ansible.builtin.command:
+    cmd: >
+      openssl genrsa -out {{ cert_dir }}/server.key 2048
+  when: not server_cert_exists.stat.exists
+
+- name: Certificate Signing Request erstellen
+  ansible.builtin.command:
+    cmd: >
+      openssl req -new
+      -key {{ cert_dir }}/server.key
+      -out {{ cert_dir }}/server.csr
+      -config {{ cert_dir }}/san.cnf
+  when: not server_cert_exists.stat.exists
+
+- name: Server-Zertifikat mit CA signieren
+  ansible.builtin.command:
+    cmd: >
+      openssl x509 -req
+      -in {{ cert_dir }}/server.csr
+      -CA {{ cert_dir }}/ca.crt
+      -CAkey {{ cert_dir }}/ca.key
+      -CAcreateserial
+      -out {{ cert_dir }}/server.crt
+      -days {{ cert_validity_days }}
+      -sha256
+      -extfile {{ cert_dir }}/san.cnf
+      -extensions v3_req
+  when: not server_cert_exists.stat.exists
+
+# -------------------------------------------------------
+# 4. Berechtigungen setzen
+# -------------------------------------------------------
+- name: Zertifikats-Dateien absichern
+  ansible.builtin.file:
+    path: "{{ cert_dir }}/{{ item }}"
+    mode: "0600"
+  loop:
+    - ca.key
+    - server.key
+  when: not server_cert_exists.stat.exists
+
+- name: Oeffentliche Zertifikate lesbar machen
+  ansible.builtin.file:
+    path: "{{ cert_dir }}/{{ item }}"
+    mode: "0644"
+  loop:
+    - ca.crt
+    - server.crt
+  when: not server_cert_exists.stat.exists

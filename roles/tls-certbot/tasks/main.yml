@@ -1,0 +1,62 @@
+---
+# -------------------------------------------------------
+# 1. Certbot installieren
+# -------------------------------------------------------
+- name: Certbot installieren (Debian)
+  ansible.builtin.apt:
+    name:
+      - certbot
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: Certbot installieren (RedHat)
+  ansible.builtin.dnf:
+    name:
+      - certbot
+    state: present
+  when: ansible_os_family == "RedHat"
+
+# -------------------------------------------------------
+# 2. Pruefen ob Zertifikat bereits existiert
+# -------------------------------------------------------
+- name: Pruefen ob Zertifikat vorhanden
+  ansible.builtin.stat:
+    path: "/etc/letsencrypt/live/{{ certbot_domains[0] }}/fullchain.pem"
+  register: certbot_cert_exists
+
+# -------------------------------------------------------
+# 3. Zertifikat anfordern
+# -------------------------------------------------------
+- name: Zertifikat anfordern (Standalone)
+  ansible.builtin.command:
+    cmd: >
+      certbot certonly --standalone
+      --non-interactive
+      --agree-tos
+      --email {{ certbot_email }}
+      {% for d in certbot_domains %}
+      -d {{ d }}
+      {% endfor %}
+      {% if certbot_staging | default(false) %}
+      --staging
+      {% endif %}
+  when: not certbot_cert_exists.stat.exists
+  notify: Caddy neu laden
+
+# -------------------------------------------------------
+# 4. Zertifikatspfade setzen (fuer andere Roles)
+# -------------------------------------------------------
+- name: TLS-Pfade als Facts setzen
+  ansible.builtin.set_fact:
+    tls_cert_path: "/etc/letsencrypt/live/{{ certbot_domains[0] }}/fullchain.pem"
+    tls_key_path: "/etc/letsencrypt/live/{{ certbot_domains[0] }}/privkey.pem"
+
+# -------------------------------------------------------
+# 5. Auto-Renewal sicherstellen
+# -------------------------------------------------------
+- name: Certbot Renewal Timer aktivieren
+  ansible.builtin.systemd:
+    name: certbot.timer
+    enabled: true
+    state: started

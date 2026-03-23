@@ -1,0 +1,54 @@
+---
+# Site Playbook: Self-Hosted Identity Stack
+#
+# Verwendung:
+#   Alles:            ansible-playbook -i inventory site.yml
+#   Nur Zertifikate:  ansible-playbook -i inventory site.yml --tags tls
+#   Nur Docker-Stack: ansible-playbook -i inventory site.yml --tags docker-stack
+#   Nur CA verteilen: ansible-playbook -i inventory site.yml --tags trust-ca
+#   Nur Clients:      ansible-playbook -i inventory site.yml --tags lldap-client
+
+# --- Phase 1: TLS-Zertifikate ---
+- name: TLS-Zertifikate bereitstellen
+  hosts: server
+  become: true
+  tags: tls
+  tasks:
+    - name: Selbstsignierte Zertifikate erstellen
+      ansible.builtin.include_role:
+        name: tls-certs
+      when: tls_mode == "selfsigned"
+
+    - name: Let's Encrypt Zertifikat per Certbot
+      ansible.builtin.include_role:
+        name: tls-certbot
+      when: tls_mode == "certbot"
+
+    - name: Vorhandene Zertifikate pruefen
+      ansible.builtin.include_role:
+        name: tls-existing
+      when: tls_mode == "existing"
+
+# --- Phase 2: Docker-Stack deployen ---
+- name: Docker-Stack deployen (LLDAP + Pocket ID + Nextcloud + Caddy)
+  hosts: server
+  become: true
+  tags: docker-stack
+  roles:
+    - docker-stack
+
+# --- Phase 3: CA-Zertifikat auf Clients verteilen ---
+- name: CA-Zertifikat auf Clients verteilen
+  hosts: clients
+  become: true
+  tags: trust-ca
+  roles:
+    - trust-ca
+
+# --- Phase 4: LLDAP-Clients einrichten ---
+- name: LLDAP-Clients einrichten (SSSD + FIDO2-SSH)
+  hosts: clients
+  become: true
+  tags: lldap-client
+  roles:
+    - lldap-client

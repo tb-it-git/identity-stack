@@ -1,0 +1,30 @@
+---
+# Prüft ob die angegebenen Zertifikatsdateien existieren
+
+- name: Pruefen ob Zertifikat vorhanden
+  ansible.builtin.stat:
+    path: "{{ tls_cert_path }}"
+  register: existing_cert
+
+- name: Pruefen ob Key vorhanden
+  ansible.builtin.stat:
+    path: "{{ tls_key_path }}"
+  register: existing_key
+
+- name: Fehler wenn Zertifikat nicht gefunden
+  ansible.builtin.fail:
+    msg: >
+      Zertifikat nicht gefunden: {{ tls_cert_path }}
+      Bitte tls_cert_path und tls_key_path in group_vars/all.yml pruefen.
+  when: not existing_cert.stat.exists
+
+- name: Fehler wenn Key nicht gefunden
+  ansible.builtin.fail:
+    msg: >
+      Key nicht gefunden: {{ tls_key_path }}
+      Bitte tls_cert_path und tls_key_path in group_vars/all.yml pruefen.
+  when: not existing_key.stat.exists
+
+- name: Zertifikatsdateien gefunden
+  ansible.builtin.debug:
+    msg: "Verwende vorhandene Zertifikate: {{ tls_cert_path }}"

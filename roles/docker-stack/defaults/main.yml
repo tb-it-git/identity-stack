@@ -1,0 +1,34 @@
+---
+# Container Runtime
+container_runtime: "podman"
+compose_cmd: "podman-compose"
+
+# LLDAP
+lldap_base_dn: "dc=forschung,dc=intern"
+lldap_admin_password: "CHANGEME"
+lldap_jwt_secret: "CHANGEME"
+
+# Pocket ID
+pocket_id_app_url: "https://id.example.com"
+pocket_id_encryption_key: "CHANGEME"
+
+# SMTP
+smtp_host: "mailhog"
+smtp_port: 1025
+smtp_from: "pocketid@example.com"
+smtp_user: ""
+smtp_password: ""
+smtp_tls: "none"
+
+# Nextcloud
+nextcloud_admin_user: "admin"
+nextcloud_admin_password: "CHANGEME"
+
+# TLS
+tls_mode: "selfsigned"
+tls_cert_path: "/opt/certs/self/server.crt"
+tls_key_path: "/opt/certs/self/server.key"
+domain: "example.com"
+
+# Deploy-Verzeichnis
+stack_dir: "/opt/identity-stack"

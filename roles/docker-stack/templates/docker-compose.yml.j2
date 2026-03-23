@@ -1,0 +1,80 @@
+---
+services:
+
+  # ─── LLDAP ──────────────────────────────────────────
+  lldap:
+    image: docker.io/lldap/lldap:latest-debian-rootless
+    container_name: lldap
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3890:3890"    # LDAP - nur localhost
+      - "127.0.0.1:17170:17170"  # Web-UI - nur localhost
+    volumes:
+      - ./lldap-data:/data
+    environment:
+      - TZ=Europe/Berlin
+      - LLDAP_JWT_SECRET={{ lldap_jwt_secret }}
+      - LLDAP_LDAP_USER_PASS={{ lldap_admin_password }}
+      - LLDAP_LDAP_BASE_DN={{ lldap_base_dn }}
+
+  # ─── Pocket ID ──────────────────────────────────────
+  pocket-id:
+    image: ghcr.io/pocket-id/pocket-id:latest
+    container_name: pocket-id
+    restart: unless-stopped
+    expose:
+      - "1411"
+    volumes:
+      - ./pocket-id-data:/app/data
+    env_file:
+      - ./pocket-id.env
+    depends_on:
+      - lldap
+
+  # ─── Nextcloud ──────────────────────────────────────
+  nextcloud:
+    image: docker.io/library/nextcloud:stable
+    container_name: nextcloud
+    restart: unless-stopped
+    expose:
+      - "80"
+    volumes:
+      - ./nextcloud-data:/var/www/html
+    environment:
+      - NEXTCLOUD_ADMIN_USER={{ nextcloud_admin_user }}
+      - NEXTCLOUD_ADMIN_PASSWORD={{ nextcloud_admin_password }}
+    depends_on:
+      - lldap
+
+  # ─── MailHog (Entwicklung/Test) ─────────────────────
+  mailhog:
+    image: docker.io/mailhog/mailhog:latest
+    container_name: mailhog
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"  # Web-UI - nur localhost
+    expose:
+      - "1025"
+
+  # ─── Caddy (Reverse Proxy) ──────────────────────────
+  caddy:
+    image: docker.io/library/caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy-data:/data
+      - ./caddy-config:/config
+{% if tls_mode == "selfsigned" or tls_mode == "existing" %}
+      - {{ tls_cert_path }}:/etc/caddy/server.crt:ro
+      - {{ tls_key_path }}:/etc/caddy/server.key:ro
+{% elif tls_mode == "certbot" %}
+      - {{ tls_cert_path }}:/etc/caddy/fullchain.pem:ro
+      - {{ tls_key_path }}:/etc/caddy/privkey.pem:ro
+{% endif %}
+    depends_on:
+      - pocket-id
+      - nextcloud

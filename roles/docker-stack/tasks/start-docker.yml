@@ -1,0 +1,8 @@
+---
+# Ausgelagert damit das community.docker Modul nur geladen wird
+# wenn container_runtime == "docker" gesetzt ist.
+
+- name: Docker Compose Stack starten
+  community.docker.docker_compose_v2:
+    project_src: "{{ stack_dir }}"
+    state: present
