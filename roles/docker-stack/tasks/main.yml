@@ -68,7 +68,3 @@
   ansible.builtin.include_tasks: start-docker.yml
   when: container_runtime == "docker"
 
-- name: NextCloud Nacharbeiten
-  ansible.builtin.include_tasks: start-nextcloud.yml
-  tags: nextcloud-postsetup
-  when: false
