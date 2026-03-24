@@ -15,6 +15,7 @@ cloud_domain: "cloud.example.com"
 lldap_base_dn: "dc=forschung,dc=intern"
 lldap_admin_password: "CHANGEME"
 lldap_jwt_secret: "CHANGEME"
+lldap_bind_password: "CHANGEME"
 
 # Pocket ID
 pocket_id_app_url: "https://{{ id_domain }}"
