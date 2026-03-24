@@ -337,6 +337,7 @@ ansible-playbook -i inventory site.yml
 # Einzelne Phasen
 ansible-playbook -i inventory site.yml --tags tls           # Nur Zertifikate
 ansible-playbook -i inventory site.yml --tags docker-stack  # Nur Stack deployen
+ansible-playbook -i inventory site.yml --tags nextcloud-postsetup  # Nextcloud Post-Setup (nach manuellem Setup)
 ansible-playbook -i inventory site.yml --tags trust-ca      # CA auf Clients verteilen
 ansible-playbook -i inventory site.yml --tags lldap-client  # SSSD-Clients (optional, separat)
 ```
