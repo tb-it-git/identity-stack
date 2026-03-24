@@ -1,0 +1,62 @@
+#####################################################################
+# occ-Befehl je nach Runtime
+#####################################################################
+- name: occ-Befehl setzen
+  ansible.builtin.set_fact:
+    occ_cmd: "{{ occ_base_cmd_podman if container_runtime == 'podman' else occ_base_cmd_docker }}"
+
+#####################################################################
+# Sanity Check
+#####################################################################
+- name: Prüfe ob Nextcloud-Container läuft
+  ansible.builtin.command:
+    cmd: "{{ container_runtime }} ps --format '{{'{{.Names}}'}}'"
+  register: running_containers
+  changed_when: false
+  failed_when: nextcloud_container not in running_containers.stdout
+
+#####################################################################
+# user_oidc installieren
+#####################################################################
+- name: Prüfe ob user_oidc installiert ist
+  ansible.builtin.command:
+    cmd: "{{ occ_cmd }} app:list"
+  register: occ_app_list
+  changed_when: false
+
+- name: Installiere user_oidc
+  ansible.builtin.command:
+    cmd: "{{ occ_cmd }} app:install user_oidc"
+  when: "'user_oidc' not in occ_app_list.stdout"
+
+#####################################################################
+# Nextcloud-Config setzen (nur bei selfsigned)
+#####################################################################
+- name: Nextcloud-Config Werte setzen
+  when: tls_mode == 'selfsigned'
+  block:
+    - name: Aktuelle Config-Werte lesen
+      ansible.builtin.command:
+        cmd: "{{ occ_cmd }} config:system:get {{ item.key }}"
+      loop:
+        - { key: "overwriteprotocol", expected: "https" }
+        - { key: "overwrite.cli.url", expected: "https://{{ cloud_domain }}" }
+        - { key: "allow_local_remote_servers", expected: "true" }
+        - { key: "trusted_domains", expected: "{{ id_domain }}" }
+      register: nc_config_current
+      changed_when: false
+      failed_when: false
+
+    - name: Config-Werte korrigieren
+      ansible.builtin.command:
+        cmd: "{{ occ_cmd }} {{ item.cmd }}"
+      loop:
+        - cmd: "config:system:set overwriteprotocol --value='https'"
+          when: "{{ (nc_config_current.results[0].stdout | default('') | trim) != 'https' }}"
+        - cmd: "config:system:set overwrite.cli.url --value='https://{{ cloud_domain }}'"
+          when: "{{ (nc_config_current.results[1].stdout | default('') | trim) != 'https://' + cloud_domain }}"
+        - cmd: "config:system:set allow_local_remote_servers --type=boolean --value=true"
+          when: "{{ (nc_config_current.results[2].stdout | default('') | trim | lower) != 'true' }}"
+        - cmd: "config:system:set trusted_domains 1 --value='{{ id_domain }}'"
+          when: "{{ id_domain not in (nc_config_current.results[3].stdout | default('')) }}"
+      when: item.when
