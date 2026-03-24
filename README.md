@@ -221,6 +221,11 @@ Den ausgegebenen Link dem User geben → im Browser öffnen → Passkey einricht
 
 > Teils automatisiert, teils manuelle Konfiguration über die Web-UI.
 
+### 6.1 Nach dem Anlegen des Admin Accounts kann man 6.2 & 6.4 auch per Ansible starten
+```bash
+ansible-playbook -i inventory site.yml --tags nextcloud-postsetup
+```
+
 ### 6.1 OIDC-App installieren (in Ansible eingebaut)
 
 ```bash
