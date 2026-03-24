@@ -71,9 +71,6 @@ services:
 {% if tls_mode == "selfsigned" or tls_mode == "existing" %}
       - {{ tls_cert_path }}:/etc/caddy/server.crt:ro
       - {{ tls_key_path }}:/etc/caddy/server.key:ro
-{% elif tls_mode == "certbot" %}
-      - {{ tls_cert_path }}:/etc/caddy/fullchain.pem:ro
-      - {{ tls_key_path }}:/etc/caddy/privkey.pem:ro
 {% endif %}
     depends_on:
       - pocket-id
