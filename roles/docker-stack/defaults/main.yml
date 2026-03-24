@@ -37,7 +37,6 @@ nextcloud_oidc_provider_url: "https://{{ id_domain }}"
 tls_mode: "selfsigned"
 tls_cert_path: "/opt/certs/self/server.crt"
 tls_key_path: "/opt/certs/self/server.key"
-domain: "example.com"
 
 # Deploy-Verzeichnis
 stack_dir: "/opt/identity-stack"
