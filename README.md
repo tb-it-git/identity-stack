@@ -222,17 +222,18 @@ Den ausgegebenen Link dem User geben → im Browser öffnen → Passkey einricht
 > Teils automatisiert, teils manuelle Konfiguration über die Web-UI.
 
 ### 6.1 Nach dem Anlegen des Admin Accounts kann man 6.2 & 6.4 auch per Ansible starten
+Da nach dem Starten des Nextcloud Containers ein manueller Schritt notwendig ist, muss das Post-Setup erst nach diesem ausgeführt werden. 
 ```bash
-ansible-playbook -i inventory site.yml --tags nextcloud-postsetup
+ansible-playbook -i inventory site.yml --tags nextcloud-postsetup  # Nextcloud Post-Setup
 ```
 
-### 6.1 OIDC-App installieren (in Ansible eingebaut)
+### 6.2 OIDC-App installieren (in Ansible eingebaut)
 
 ```bash
 podman exec -u www-data nextcloud php occ app:install user_oidc
 ```
 
-### 6.2 SSL-Vertrauen herstellen (bei Self-Signed)
+### 6.3 SSL-Vertrauen herstellen (bei Self-Signed)
 
 ```bash
 podman cp /opt/certs/self/ca.crt nextcloud:/usr/local/share/ca-certificates/identity-stack-ca.crt
@@ -241,7 +242,7 @@ podman exec nextcloud bash -c "cat /usr/local/share/ca-certificates/identity-sta
 podman-compose restart nextcloud
 ```
 
-### 6.3 Grundkonfiguration (in Ansible eingebaut)
+### 6.4 Grundkonfiguration (in Ansible eingebaut)
 
 ```bash
 # HTTPS erzwingen (WICHTIG – geht bei Daten-Reset verloren!)
@@ -258,7 +259,7 @@ podman exec -u www-data nextcloud php occ config:system:set allow_local_remote_s
 > **Wichtig:** `overwriteprotocol` und `overwrite.cli.url` werden in der Nextcloud-Datenbank gespeichert.
 > Bei `rm -rf nextcloud-data/*` gehen sie verloren und müssen neu gesetzt werden!
 
-### 6.4 OIDC-Provider konfigurieren
+### 6.5 OIDC-Provider konfigurieren
 
 > Manueller Schritt über die Nextcloud Web-UI.
 
@@ -273,7 +274,7 @@ Einstellungen → **OpenID Connect** → Provider hinzufügen:
 | Client Secret | `<aus Phase 5.3>` |
 | Discovery Endpoint | `https://id.example.com/.well-known/openid-configuration` |
 
-### 6.5 Testen
+### 6.6 Testen
 
 Abmelden → Login-Seite → **PocketID** → Passkey-Auth → eingeloggt in Nextcloud.
 
