@@ -52,3 +52,12 @@
   tags: lldap-client
   roles:
     - lldap-client
+
+# --- Phase 5: Nextcloud Post-Setup ---
+- name: Nextcloud Post-Setup (nach manuellem Admin-Account)
+  hosts: server
+  become: true
+  tags: nextcloud-postsetup
+  tasks:
+    - name: Nextcloud Nacharbeiten
+      ansible.builtin.include_tasks: roles/docker-stack/tasks/start-nextcloud.yml
