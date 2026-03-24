@@ -2,6 +2,14 @@
 # Container Runtime
 container_runtime: "podman"
 compose_cmd: "podman-compose"
+nextcloud_container: "nextcloud"
+occ_base_cmd_podman: "podman exec -u www-data {{ nextcloud_container }} php occ"
+occ_base_cmd_docker: "docker exec -u www-data {{ nextcloud_container }} php occ"
+
+# Domains
+domain: "example.com"
+id_domain: "id.example.com"
+cloud_domain: "cloud.example.com"
 
 # LLDAP
 lldap_base_dn: "dc=forschung,dc=intern"
@@ -9,13 +17,13 @@ lldap_admin_password: "CHANGEME"
 lldap_jwt_secret: "CHANGEME"
 
 # Pocket ID
-pocket_id_app_url: "https://id.example.com"
+pocket_id_app_url: "https://{{ id_domain }}"
 pocket_id_encryption_key: "CHANGEME"
 
 # SMTP
 smtp_host: "mailhog"
 smtp_port: 1025
-smtp_from: "pocketid@example.com"
+smtp_from: "pocketid@{{ domain }}"
 smtp_user: ""
 smtp_password: ""
 smtp_tls: "none"
@@ -23,6 +31,7 @@ smtp_tls: "none"
 # Nextcloud
 nextcloud_admin_user: "admin"
 nextcloud_admin_password: "CHANGEME"
+nextcloud_oidc_provider_url: "https://{{ id_domain }}"
 
 # TLS
 tls_mode: "selfsigned"
