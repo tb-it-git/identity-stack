@@ -5,6 +5,10 @@
 # Kopiere diese Datei nach group_vars/all.yml und passe sie an.
 # Passwörter sollten per ansible-vault verschlüsselt werden.
 
+domain: "example.com"
+id_domain: "id.example.com"
+cloud_domain: "cloud.example.com"
+
 # -------------------------------------------------------------
 # Container Runtime
 # -------------------------------------------------------------
@@ -30,13 +34,13 @@ lldap_bind_password: "CHANGEME"
 # -------------------------------------------------------------
 # Pocket ID
 # -------------------------------------------------------------
-pocket_id_app_url: "https://id.example.com"
+pocket_id_app_url: "https://{{ id_domain }}"
 pocket_id_encryption_key: "CHANGEME-use-openssl-rand-base64-32"
 
 # SMTP (MailHog für Tests, später echten Mailserver eintragen)
 smtp_host: "mailhog"
 smtp_port: 1025
-smtp_from: "pocketid@example.com"
+smtp_from: "pocketid@{{ domain }}"
 smtp_user: ""
 smtp_password: ""
 smtp_tls: "none"
@@ -47,10 +51,14 @@ smtp_tls: "none"
 nextcloud_admin_user: "admin"
 nextcloud_admin_password: "CHANGEME"
 
+nextcloud_container: "nextcloud"
+occ_base_cmd_podman: "podman exec -u www-data {{ nextcloud_container }} php occ"
+occ_base_cmd_docker: "docker exec -u www-data {{ nextcloud_container }} php occ"
+
 # OIDC (aus Pocket ID OIDC-Client kopieren)
 nextcloud_oidc_client_id: "CHANGEME"
 nextcloud_oidc_client_secret: "CHANGEME"
-nextcloud_oidc_provider_url: "https://id.example.com"
+nextcloud_oidc_provider_url: "https://{{ id_domain }}"
 
 # -------------------------------------------------------------
 # TLS / Zertifikate
@@ -69,7 +77,6 @@ nextcloud_oidc_provider_url: "https://id.example.com"
 tls_mode: "selfsigned"
 
 # --- Fuer alle Modi: ---
-domain: "example.com"
 tls_cert_path: "/opt/certs/self/server.crt"
 tls_key_path: "/opt/certs/self/server.key"
 
@@ -82,15 +89,15 @@ ca_state: "RLP"
 ca_validity_days: 3650
 cert_validity_days: 365
 cert_domains:
-  - "id.{{ domain }}"
-  - "cloud.{{ domain }}"
+  - "{{ id_domain }}"
+  - "{{ cloud_domain }}"
   - "*.{{ domain }}"
 
 # --- Nur fuer certbot: ---
-certbot_email: "admin@example.com"
+certbot_email: "admin@{{ domain }}"
 certbot_domains:
-  - "id.{{ domain }}"
-  - "cloud.{{ domain }}"
+  - "{{ id_domain }}"
+  - "{{ cloud_domain }}"
 # certbot_staging: true  # Zum Testen (kein Rate-Limit)
 
 # -------------------------------------------------------------
