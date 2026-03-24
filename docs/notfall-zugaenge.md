@@ -4,6 +4,7 @@
 
 Jeder Dienst bekommt einen lokalen Notfall-Admin, der nicht über OIDC/LLDAP läuft.
 Passwort ausdrucken → versiegelter Umschlag → Tresor.
+Die Docker Befehle können 1:1 auch mit Podman genutzt werden.
 
 ---
 ### Nextcloud
