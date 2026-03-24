@@ -41,7 +41,7 @@ LLDAP + Pocket ID + Nextcloud mit Passkey-Login. Alles auf einem Server, alles i
 ## Phase 1: Repo klonen und konfigurieren
 
 ```bash
-git clone https://github.com/<user>/identity-stack.git
+git clone https://github.com/tb-it-git/identity-stack.git
 cd identity-stack
 
 # Inventory anlegen
@@ -219,9 +219,9 @@ Den ausgegebenen Link dem User geben → im Browser öffnen → Passkey einricht
 
 ## Phase 6: Nextcloud OIDC anbinden
 
-> Teils automatisierbar, teils manuelle Konfiguration über die Web-UI.
+> Teils automatisiert, teils manuelle Konfiguration über die Web-UI.
 
-### 6.1 OIDC-App installieren
+### 6.1 OIDC-App installieren (in Ansible eingebaut)
 
 ```bash
 podman exec -u www-data nextcloud php occ app:install user_oidc
@@ -236,7 +236,7 @@ podman exec nextcloud bash -c "cat /usr/local/share/ca-certificates/identity-sta
 podman-compose restart nextcloud
 ```
 
-### 6.3 Grundkonfiguration
+### 6.3 Grundkonfiguration (in Ansible eingebaut)
 
 ```bash
 # HTTPS erzwingen (WICHTIG – geht bei Daten-Reset verloren!)
