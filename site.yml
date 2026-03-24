@@ -5,6 +5,7 @@
 #   Alles:            ansible-playbook -i inventory site.yml
 #   Nur Zertifikate:  ansible-playbook -i inventory site.yml --tags tls
 #   Nur Docker-Stack: ansible-playbook -i inventory site.yml --tags docker-stack
+#   Post NextCloud Setup : ansible-playbook -i inventory site.yml --tags nextcloud-postsetup
 #   Nur CA verteilen: ansible-playbook -i inventory site.yml --tags trust-ca
 #   Nur Clients:      ansible-playbook -i inventory site.yml --tags lldap-client
 
