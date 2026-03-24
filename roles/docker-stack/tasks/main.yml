@@ -22,6 +22,15 @@
   loop:
     - "{{ stack_dir }}/lldap-data"
     - "{{ stack_dir }}/pocket-id-data"
+
+- name: Container-Datenverzeichnisse erstellen (Owner 33:33)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "33"
+    group: "33"
+    mode: "0750"
+  loop:
     - "{{ stack_dir }}/nextcloud-data"
 
 # -------------------------------------------------------
@@ -58,3 +67,6 @@
 - name: Stack starten (Docker)
   ansible.builtin.include_tasks: start-docker.yml
   when: container_runtime == "docker"
+
+- name: NextCloud Nacharbeiten
+  ansible.builtin.include_tasks: start-nextcloud.yml
